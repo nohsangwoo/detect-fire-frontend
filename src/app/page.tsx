@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 
-const FRAME_RATE = 4; // 초당 4프레임
+const FRAME_RATE = 1/5; // 초당 4프레임
 const FRAME_COUNT = 3; // 3프레임씩 요청
 
 interface Detection {
@@ -174,7 +174,7 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <img src={`http://localhost:8000/${result.result_image}`} alt="처리된 이미지" />
+              {/* <img src={`http://localhost:8000/${result.result_image}`} alt="처리된 이미지" /> */}
             </div>
           ))}
         </div>
