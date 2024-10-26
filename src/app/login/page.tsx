@@ -1,12 +1,33 @@
 'use client';
 
 import { useState } from 'react';
+import { useSignUp } from '../../hooks/useSignUp';
 
 export default function Login() {
     const [isLogin, setIsLogin] = useState(true);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const signUpMutation = useSignUp();
+
+    console.log("isLogin: ", isLogin);
 
     const toggleMode = () => {
         setIsLogin(!isLogin);
+    };
+
+    const handleLogin = () => {
+        console.log('login');
+    };
+
+    const handleSignup = async () => {
+        try {
+            signUpMutation.mutate({ email, password });
+            console.log('회원가입 성공');
+            // 회원가입 성공 후 처리 (예: 로그인 모드로 전환)
+            setIsLogin(true);
+        } catch (error) {
+            console.error('회원가입 실패:', error);
+        }
     };
 
     return (
@@ -25,20 +46,32 @@ export default function Login() {
                     </div>
                 </div>
                 <div className="text-celadon text-2xl font-bold flex flex-col gap-4 ">
-                    <input type="text" placeholder="email" className="w-[300px] h-[50px] rounded-full bg-transparent border-[2px] border-celadon px-4 ring-0 focus:ring-0 focus:outline-none" />
-                    <input type="password" placeholder="password" className="w-[300px] h-[50px] rounded-full bg-transparent border-[2px] border-celadon px-4 ring-0 focus:ring-0 focus:outline-none" />
-                    <div className="w-[300px] h-[50px] rounded-full border-[3px] border-celadon text-black-1 flex justify-center items-center text-white text-xl font-extrabold cursor-pointer">
-                        {isLogin ? '로그인' : '회원가입'}
+                    <input
+                        type="text"
+                        placeholder="email"
+                        className="w-[300px] h-[50px] rounded-full bg-transparent border-[2px] border-celadon px-4 ring-0 focus:ring-0 focus:outline-none"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <input
+                        type="password"
+                        placeholder="password"
+                        className="w-[300px] h-[50px] rounded-full bg-transparent border-[2px] border-celadon px-4 ring-0 focus:ring-0 focus:outline-none"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <div
+                        className="w-[300px] h-[50px] rounded-full border-[3px] border-celadon text-black-1 flex justify-center items-center text-white text-xl font-extrabold cursor-pointer"
+                        onClick={isLogin ? handleLogin : handleSignup}
+                    >
+                        {isLogin ? 'login' : 'signup'}
                     </div>
                     <div className="flex absolute right-0 bottom-0 w-full justify-end">
                         <div className="flex flex-col justify-end ">
                             <div className="flex justify-end">
                                 <div className="text-sm cursor-pointer text-perano" onClick={toggleMode}>
-                                    {isLogin ? '회원가입' : '로그인'}
+                                    {isLogin ? 'signup' : 'login'}
                                 </div>
-                            </div>
-                            <div className="flex justify-end">
-                                <div className="text-sm cursor-pointer text-perano">비밀번호 찾기</div>
                             </div>
                         </div>
                     </div>
