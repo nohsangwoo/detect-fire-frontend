@@ -17,14 +17,21 @@ export default function Login() {
                         <div className=" bg-celadon w-[100px] h-[100px] rounded-full"></div>
                     </div>
                 </div>
-                <div className="text-celadon text-2xl font-bold flex flex-col gap-4">
+                <div className="text-celadon text-2xl font-bold flex flex-col gap-4 ">
                     <input type="text" placeholder="email" className="w-[300px] h-[50px] rounded-full bg-transparent border-[2px] border-celadon px-4 ring-0 focus:ring-0 focus:outline-none" />
                     <input type="password" placeholder="password" className="w-[300px] h-[50px] rounded-full bg-transparent border-[2px] border-celadon px-4 ring-0 focus:ring-0 focus:outline-none" />
                     <div className="w-[300px] h-[50px] rounded-full border-[3px] border-celadon text-black-1 flex justify-center items-center text-white text-xl font-extrabold cursor-pointer">
-                        login
+                        로그인
                     </div>
-                    <div className="flex">
-                        <div className="text-sm cursor-pointer text-celadon">비밀번호 찾기</div>
+                    <div className="flex absolute right-0 bottom-0 w-full justify-end">
+                        <div className="flex flex-col justify-end ">
+                            <div className="flex justify-end">
+                                <div className="text-sm cursor-pointer text-perano ">회원가입</div>
+                            </div>
+                            <div className="flex justify-end">
+                                <div className="text-sm cursor-pointer text-perano">비밀번호 찾기</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
