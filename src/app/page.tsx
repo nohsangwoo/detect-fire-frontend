@@ -1,101 +1,184 @@
-import Image from "next/image";
+'use client';
+import { useState, useEffect, useRef } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
+
+const FRAME_RATE = 4; // 초당 4프레임
+const FRAME_COUNT = 3; // 3프레임씩 요청
+
+interface Detection {
+  class_name: string;
+  confidence: number;
+  bbox: number[];
+}
+
+interface ImageProcessingResponse {
+  message: string;
+  file_name: string;
+  detections: Detection[];
+  result_image: string;
+}
 
 export default function Home() {
+  const [frames, setFrames] = useState<Blob[]>([]);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [detectionResults, setDetectionResults] = useState<ImageProcessingResponse[]>([]);
+
+  const processFrames = async () => {
+    if (frames.length !== FRAME_COUNT) return null;
+
+    const formData = new FormData();
+    frames.forEach((frame, index) => {
+      formData.append(`file`, frame, `frame${index}.jpg`);
+    });
+
+    const response = await axios.post<ImageProcessingResponse>(
+      'http://localhost:8000/detectfromimage',
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }
+    );
+    return response.data;
+  };
+
+  const { mutate, isPending, error } = useMutation({
+    mutationFn: processFrames,
+    onSuccess: (data) => {
+      if (data) {
+        setDetectionResults(prev => [...prev, data]);
+        console.log("새로운 감지 결과:", data);
+        console.log("누적된 감지 결과:", [...detectionResults, data]);
+      }
+    },
+    onError: (error) => {
+      console.error("요청 처리 중 오류 발생:", error);
+      // 사용자에게 오류 메시지 표시
+    },
+    onSettled: () => {
+      console.log("요청 완료");
+    }
+  });
+
+  useEffect(() => {
+    let captureInterval: NodeJS.Timeout;
+
+    const captureFrames = async () => {
+      if (videoRef.current && isDetecting) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+
+        captureInterval = setInterval(() => {
+          if (ctx && videoRef.current) {
+            ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                setFrames(prev => [...prev, blob].slice(-FRAME_COUNT));
+              }
+            }, 'image/jpeg');
+          }
+        }, 1000 / FRAME_RATE);
+      }
+    };
+
+    if (isDetecting) {
+      captureFrames();
+    }
+
+    return () => {
+      if (captureInterval) {
+        clearInterval(captureInterval);
+      }
+    };
+  }, [isDetecting]);
+
+  useEffect(() => {
+    console.log("--------------------------------")
+    console.log("isDetecting: ", isDetecting);
+    console.log("frames: ", frames);
+    console.log("framelength: ", frames.length);
+    console.log("FRAME_COUNT: ", FRAME_COUNT)
+
+    const condition = isDetecting && frames.length === FRAME_COUNT
+    console.log("condition: ", condition)
+
+    let processInterval: NodeJS.Timeout | null = null;
+
+    if (condition) {
+      console.log("processInterval 설정 시도")
+      processInterval = setInterval(() => {
+        console.log("mutate 실행")
+        mutate();
+      }, 1000 / FRAME_RATE * FRAME_COUNT);
+    }
+
+    console.log("--------------------------------")
+
+    return () => {
+      if (processInterval) {
+        console.log("이전 processInterval 정리")
+        clearInterval(processInterval);
+      }
+    };
+  }, [isDetecting, frames.length, mutate]);
+
+  const handleStartDetection = () => {
+    setIsDetecting(true);
+  };
+
+  const handleStopDetection = () => {
+    setIsDetecting(false);
+    setFrames([]);
+  };
+
+  useEffect(() => {
+    async function setupCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error("카메라 접근 오류:", error);
+      }
+    }
+
+    setupCamera();
+  }, []);
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <video ref={videoRef} autoPlay muted playsInline style={{ width: '640px', height: '480px' }} />
+      {!isDetecting ? (
+        <button onClick={handleStartDetection}>화재 감지 시작</button>
+      ) : (
+        <button onClick={handleStopDetection}>화재 감지 중지</button>
+      )}
+      {isPending && <p>처리 중...</p>}
+      {error && <p>오류 발생: {(error as Error).message}</p>}
+      {detectionResults.length > 0 && (
+        <div>
+          <h2>처리 결과:</h2>
+          {detectionResults.map((result, index) => (
+            <div key={index}>
+              <p>{result.message}</p>
+              <p>파일명: {result.file_name}</p>
+              <h3>감지된 객체:</h3>
+              <ul>
+                {result.detections.map((detection, detectionIndex) => (
+                  <li key={detectionIndex}>
+                    {detection.class_name} (신뢰도: {detection.confidence.toFixed(2)})
+                  </li>
+                ))}
+              </ul>
+              <img src={`http://localhost:8000/${result.result_image}`} alt="처리된 이미지" />
+            </div>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
     </div>
   );
 }
