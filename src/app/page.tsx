@@ -3,8 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 
-const FRAME_RATE = 1/5; // 초당 4프레임
-const FRAME_COUNT = 3; // 3프레임씩 요청
+const REQUEST_INTERVAL = 1000; // 1초마다 요청 (밀리초 단위)
 
 interface Detection {
   class_name: string;
@@ -20,110 +19,68 @@ interface ImageProcessingResponse {
 }
 
 export default function Home() {
-  const [frames, setFrames] = useState<Blob[]>([]);
   const [isDetecting, setIsDetecting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [detectionResults, setDetectionResults] = useState<ImageProcessingResponse[]>([]);
 
-  const processFrames = async () => {
-    if (frames.length !== FRAME_COUNT) return null;
+  const processFrame = async () => {
+    if (!videoRef.current) return null;
 
-    const formData = new FormData();
-    frames.forEach((frame, index) => {
-      formData.append(`file`, frame, `frame${index}.jpg`);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+
+    ctx?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    
+    return new Promise<Blob | null>((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg');
     });
-
-    const response = await axios.post<ImageProcessingResponse>(
-      'http://localhost:8000/detectfromimage',
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
-    );
-    return response.data;
   };
 
   const { mutate, isPending, error } = useMutation({
-    mutationFn: processFrames,
+    mutationFn: async () => {
+      const frame = await processFrame();
+      if (!frame) return null;
+
+      const formData = new FormData();
+      formData.append('file', frame, 'frame.jpg');
+
+      const response = await axios.post<ImageProcessingResponse>(
+        'http://localhost:8000/detectfromimage',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
+      return response.data;
+    },
     onSuccess: (data) => {
       if (data) {
         setDetectionResults(prev => [...prev, data]);
         console.log("새로운 감지 결과:", data);
-        console.log("누적된 감지 결과:", [...detectionResults, data]);
       }
     },
     onError: (error) => {
       console.error("요청 처리 중 오류 발생:", error);
-      // 사용자에게 오류 메시지 표시
     },
-    onSettled: () => {
-      console.log("요청 완료");
-    }
   });
 
   useEffect(() => {
-    let captureInterval: NodeJS.Timeout;
-
-    const captureFrames = async () => {
-      if (videoRef.current && isDetecting) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-
-        captureInterval = setInterval(() => {
-          if (ctx && videoRef.current) {
-            ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob((blob) => {
-              if (blob) {
-                setFrames(prev => [...prev, blob].slice(-FRAME_COUNT));
-              }
-            }, 'image/jpeg');
-          }
-        }, 1000 / FRAME_RATE);
-      }
-    };
+    let intervalId: NodeJS.Timeout;
 
     if (isDetecting) {
-      captureFrames();
-    }
-
-    return () => {
-      if (captureInterval) {
-        clearInterval(captureInterval);
-      }
-    };
-  }, [isDetecting]);
-
-  useEffect(() => {
-    console.log("--------------------------------")
-    console.log("isDetecting: ", isDetecting);
-    console.log("frames: ", frames);
-    console.log("framelength: ", frames.length);
-    console.log("FRAME_COUNT: ", FRAME_COUNT)
-
-    const condition = isDetecting && frames.length === FRAME_COUNT
-    console.log("condition: ", condition)
-
-    let processInterval: NodeJS.Timeout | null = null;
-
-    if (condition) {
-      console.log("processInterval 설정 시도")
-      processInterval = setInterval(() => {
-        console.log("mutate 실행")
+      intervalId = setInterval(() => {
         mutate();
-      }, 1000 / FRAME_RATE * FRAME_COUNT);
+      }, REQUEST_INTERVAL);
     }
 
-    console.log("--------------------------------")
-
     return () => {
-      if (processInterval) {
-        console.log("이전 processInterval 정리")
-        clearInterval(processInterval);
+      if (intervalId) {
+        clearInterval(intervalId);
       }
     };
-  }, [isDetecting, frames.length, mutate]);
+  }, [isDetecting, mutate]);
 
   const handleStartDetection = () => {
     setIsDetecting(true);
@@ -131,7 +88,6 @@ export default function Home() {
 
   const handleStopDetection = () => {
     setIsDetecting(false);
-    setFrames([]);
   };
 
   useEffect(() => {
