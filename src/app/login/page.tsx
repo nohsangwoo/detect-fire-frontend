@@ -1,5 +1,6 @@
 'use client';
 
+import { useLogin } from '@/hooks/useLogin';
 import { useSignUp } from '@/hooks/useSignUp';
 import { useState } from 'react';
 
@@ -8,6 +9,7 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const signUpMutation = useSignUp();
+    const loginMutation = useLogin();
 
     console.log("isLogin: ", isLogin);
 
@@ -15,9 +17,15 @@ export default function Login() {
         setIsLogin(!isLogin);
     };
 
-    const handleLogin = () => {
-        console.log('login');
-    };
+    const handleLogin = async () => {
+        try {
+            loginMutation.mutate({ username: email, password })
+            console.log('로그인 성공')
+            setIsLogin(true)
+        } catch (error) {
+            console.error('로그인 실패:', error)
+        }
+    }
 
     const handleSignup = async () => {
         try {
@@ -33,7 +41,7 @@ export default function Login() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (isLogin) {
-            handleLogin();
+            await handleLogin();
         } else {
             await handleSignup();
         }

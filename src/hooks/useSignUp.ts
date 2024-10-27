@@ -1,8 +1,8 @@
 'use client'
 
 import { useMutation } from '@tanstack/react-query'
-import { signUp } from '../api/auth'
 import { clientSideHashingPassword } from '@/lib/hashingPassword'
+import { signUp } from '@/api/auth'
 
 export const useSignUp = () => {
   return useMutation({
@@ -13,9 +13,9 @@ export const useSignUp = () => {
       email: string
       password: string
     }) => {
-      const hashedPassword = clientSideHashingPassword(password)
-      console.log('hashedPassword: ', hashedPassword)
-      return signUp(email, hashedPassword)
+      //   const hashedPassword = clientSideHashingPassword(password)
+      //   console.log('hashedPassword: ', hashedPassword)
+      return signUp(email, password)
     },
     onSuccess: (data, variables, context) => {
       console.log('회원가입 성공 data: ', data)
