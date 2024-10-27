@@ -1,7 +1,7 @@
 'use client';
 
+import { useSignUp } from '@/hooks/useSignUp';
 import { useState } from 'react';
-import { useSignUp } from '../../hooks/useSignUp';
 
 export default function Login() {
     const [isLogin, setIsLogin] = useState(true);
@@ -30,6 +30,15 @@ export default function Login() {
         }
     };
 
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (isLogin) {
+            handleLogin();
+        } else {
+            await handleSignup();
+        }
+    };
+
     return (
         <div className="w-full h-screen bg-black-1 flex justify-center items-center">
             <div className="flex justify-center items-center w-[700px] h-[700px] rounded-full bg-transparent border-[3px] border-celadon relative">
@@ -45,7 +54,7 @@ export default function Login() {
                         <div className=" bg-celadon w-[100px] h-[100px] rounded-full"></div>
                     </div>
                 </div>
-                <div className="text-celadon text-2xl font-bold flex flex-col gap-4 ">
+                <form onSubmit={handleSubmit} className="text-celadon text-2xl font-bold flex flex-col gap-4">
                     <input
                         type="text"
                         placeholder="email"
@@ -60,12 +69,12 @@ export default function Login() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    <div
+                    <button
+                        type="submit"
                         className="w-[300px] h-[50px] rounded-full border-[3px] border-celadon text-black-1 flex justify-center items-center text-white text-xl font-extrabold cursor-pointer"
-                        onClick={isLogin ? handleLogin : handleSignup}
                     >
                         {isLogin ? 'login' : 'signup'}
-                    </div>
+                    </button>
                     <div className="flex absolute right-0 bottom-0 w-full justify-end">
                         <div className="flex flex-col justify-end ">
                             <div className="flex justify-end">
@@ -75,7 +84,7 @@ export default function Login() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     );
