@@ -11,14 +11,18 @@ interface ErrorResponse {
   detail: string
 }
 
-export const useLogin = () => {
+interface useLoginProps {
+  onSuccessFunction?: () => void
+}
+
+export const useLogin = ({ onSuccessFunction }: useLoginProps) => {
   return useMutation({
     mutationFn: async ({ username, password }: LoginCredentials) => {
       return login(username, password)
     },
     onSuccess: data => {
       console.log('로그인 성공:', data)
-      // 로그인 성공 후 처리 (예: 홈 페이지로 리다이렉트)
+      onSuccessFunction && onSuccessFunction()
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       const errorMessage = error || '로그인 중 오류가 발생했습니다.'

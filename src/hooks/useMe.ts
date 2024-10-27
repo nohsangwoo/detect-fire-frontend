@@ -18,6 +18,7 @@ interface User {
 
 const fetchMe = async (): Promise<User> => {
   const response = await me()
+  console.log('fetchMe response: ', response)
   return response
 }
 
@@ -27,13 +28,12 @@ const useMe = () => {
     queryFn: fetchMe,
     retry: false,
     refetchOnWindowFocus: false,
+    // 아래 옵션들을 추가합니다
+    gcTime: 0,
+    staleTime: 0,
+    refetchInterval: 0,
   })
 
-  //   if (query.error) {
-  //     // router.push('/login')
-  //     // console.error('useMe error: ', query.error)
-  //     // console.log("asdfasdferror")
-  //   }
   return query
 }
 

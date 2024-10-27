@@ -4,15 +4,22 @@ import { useLogin } from '@/hooks/useLogin';
 import useMe from '@/hooks/useMe';
 import { useSignUp } from '@/hooks/useSignUp';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Login() {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const signUpMutation = useSignUp();
-    const loginMutation = useLogin();
     const router = useRouter();
+    const meQuery = useMe()
+
+    const handleLoginMutationSuccess = () => {
+        meQuery.refetch()
+        setIsLogin(true)
+        router.push('/')
+    }
+    const loginMutation = useLogin({ onSuccessFunction: handleLoginMutationSuccess });
 
     const toggleMode = () => {
         setIsLogin(!isLogin);
@@ -21,8 +28,6 @@ export default function Login() {
     const handleLogin = async () => {
         try {
             loginMutation.mutate({ username: email, password })
-            console.log('로그인 성공')
-            setIsLogin(true)
         } catch (error) {
             console.error('로그인 실패:', error)
         }
@@ -48,17 +53,20 @@ export default function Login() {
         }
     };
 
-    const meQuery = useMe()
-    console.log('meQuery data: ', meQuery.data)
-    console.log('meQuery isLoading: ', meQuery.isLoading)
 
-    if (meQuery.isLoading) {
-        return <div>Loading...</div>
+    useEffect(() => {
+        if (meQuery.data) {
+            console.log('로그인중:', meQuery.data)
+            router.push('/')
+        }
+    }, [meQuery.data])
+
+    if (!!meQuery?.data) {
+        return <div>페이지 이동중...</div>
     }
 
-    if (meQuery.data) {
-        router.push('/')
-        return <div>Already logged in</div>
+    if (meQuery.isLoading || meQuery.isFetching) {
+        return <div>Loading...</div>
     }
 
 

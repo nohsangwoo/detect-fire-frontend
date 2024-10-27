@@ -28,9 +28,8 @@ export default function Home() {
   const logoutMutation = useLogout();
   const router = useRouter()
   const meQuery = useMe();
-
-  console.log('me: ', meQuery.data)
-
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
 
   const processFrame = async () => {
     if (!videoRef.current) return null;
@@ -99,10 +98,33 @@ export default function Home() {
     setIsDetecting(false);
   };
 
+  const handleLogout = () => {
+    router.push('/login')
+    logoutMutation.mutate()
+  }
+
+  useEffect(() => {
+    async function getDevices() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        setDevices(videoDevices);
+      } catch (error) {
+        console.error("디바이스 목록 가져오기 오류:", error);
+      }
+    }
+
+    getDevices();
+  }, []);
+
   useEffect(() => {
     async function setupCamera() {
+      if (!selectedDeviceId) return;
+
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: selectedDeviceId }
+        });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -112,14 +134,13 @@ export default function Home() {
     }
 
     setupCamera();
-  }, []);
-
+  }, [selectedDeviceId]);
 
 
   useEffect(() => {
     if (meQuery.error) {
+      console.log('로그인 상태 확인 오류:', meQuery.error)
       router.push('/login')
-      console.log('meQuery.data: ', meQuery.data)
     }
   }, [meQuery.error])
 
@@ -131,7 +152,19 @@ export default function Home() {
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <video ref={videoRef} autoPlay muted playsInline style={{ width: '640px', height: '480px' }} />
+      {devices.length > 0 && (
+        <select onChange={(e) => setSelectedDeviceId(e.target.value)}>
+          <option value="">카메라를 선택하세요</option>
+          {devices.map((device) => (
+            <option key={device.deviceId} value={device.deviceId}>
+              {device.label || `카메라 ${device.deviceId}`}
+            </option>
+          ))}
+        </select>
+      )}
+      {selectedDeviceId && (
+        <video ref={videoRef} autoPlay muted playsInline style={{ width: '640px', height: '480px' }} />
+      )}
       {!isDetecting ? (
         <button onClick={handleStartDetection}>화재 감지 시작</button>
       ) : (
@@ -159,7 +192,7 @@ export default function Home() {
           ))}
         </div>
       )}
-      <button onClick={() => logoutMutation.mutate()}>로그아웃</button>
+      <button onClick={handleLogout}>로그아웃</button>
     </div>
   );
 }
