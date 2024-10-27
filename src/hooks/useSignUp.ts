@@ -1,8 +1,7 @@
 'use client'
 
-import { useMutation } from '@tanstack/react-query'
-import { clientSideHashingPassword } from '@/lib/hashingPassword'
 import { signUp } from '@/api/auth'
+import { useMutation } from '@tanstack/react-query'
 
 export const useSignUp = () => {
   return useMutation({
