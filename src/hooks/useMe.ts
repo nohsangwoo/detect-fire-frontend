@@ -22,12 +22,19 @@ const fetchMe = async (): Promise<User> => {
 }
 
 const useMe = () => {
-  return useQuery<User, Error>({
+  const query = useQuery<User, Error>({
     queryKey: ['me'],
     queryFn: fetchMe,
     retry: false,
     refetchOnWindowFocus: false,
   })
+
+  //   if (query.error) {
+  //     // router.push('/login')
+  //     // console.error('useMe error: ', query.error)
+  //     // console.log("asdfasdferror")
+  //   }
+  return query
 }
 
 export default useMe

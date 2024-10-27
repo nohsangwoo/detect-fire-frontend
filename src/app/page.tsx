@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
+import { useLogout } from '@/hooks/useLogout';
+import useMe from '@/hooks/useMe';
+import { useRouter } from 'next/navigation';
 
 const REQUEST_INTERVAL = 1000; // 1초마다 요청 (밀리초 단위)
 
@@ -22,6 +25,12 @@ export default function Home() {
   const [isDetecting, setIsDetecting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [detectionResults, setDetectionResults] = useState<ImageProcessingResponse[]>([]);
+  const logoutMutation = useLogout();
+  const router = useRouter()
+  const meQuery = useMe();
+
+  console.log('me: ', meQuery.data)
+
 
   const processFrame = async () => {
     if (!videoRef.current) return null;
@@ -32,7 +41,7 @@ export default function Home() {
     canvas.height = videoRef.current.videoHeight;
 
     ctx?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    
+
     return new Promise<Blob | null>((resolve) => {
       canvas.toBlob((blob) => resolve(blob), 'image/jpeg');
     });
@@ -105,6 +114,21 @@ export default function Home() {
     setupCamera();
   }, []);
 
+
+
+  useEffect(() => {
+    if (meQuery.error) {
+      router.push('/login')
+      console.log('meQuery.data: ', meQuery.data)
+    }
+  }, [meQuery.error])
+
+
+  if (meQuery.isLoading) {
+    return <div>loading...</div>
+  }
+
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <video ref={videoRef} autoPlay muted playsInline style={{ width: '640px', height: '480px' }} />
@@ -135,6 +159,7 @@ export default function Home() {
           ))}
         </div>
       )}
+      <button onClick={() => logoutMutation.mutate()}>로그아웃</button>
     </div>
   );
 }

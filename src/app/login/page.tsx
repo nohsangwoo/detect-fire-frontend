@@ -3,6 +3,7 @@
 import { useLogin } from '@/hooks/useLogin';
 import useMe from '@/hooks/useMe';
 import { useSignUp } from '@/hooks/useSignUp';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function Login() {
@@ -11,8 +12,7 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const signUpMutation = useSignUp();
     const loginMutation = useLogin();
-
-    console.log("isLogin: ", isLogin);
+    const router = useRouter();
 
     const toggleMode = () => {
         setIsLogin(!isLogin);
@@ -48,9 +48,18 @@ export default function Login() {
         }
     };
 
-    const query = useMe()
-    console.log('query data: ', query.data)
-    console.log('query isLoading: ', query.isLoading)
+    const meQuery = useMe()
+    console.log('meQuery data: ', meQuery.data)
+    console.log('meQuery isLoading: ', meQuery.isLoading)
+
+    if (meQuery.isLoading) {
+        return <div>Loading...</div>
+    }
+
+    if (meQuery.data) {
+        router.push('/')
+        return <div>Already logged in</div>
+    }
 
 
     return (
