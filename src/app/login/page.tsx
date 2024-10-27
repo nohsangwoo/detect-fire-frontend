@@ -1,6 +1,7 @@
 'use client';
 
 import { useLogin } from '@/hooks/useLogin';
+import useMe from '@/hooks/useMe';
 import { useSignUp } from '@/hooks/useSignUp';
 import { useState } from 'react';
 
@@ -47,6 +48,11 @@ export default function Login() {
         }
     };
 
+    const query = useMe()
+    console.log('query data: ', query.data)
+    console.log('query isLoading: ', query.isLoading)
+
+
     return (
         <div className="w-full h-screen bg-black-1 flex justify-center items-center">
             <div className="flex justify-center items-center w-[700px] h-[700px] rounded-full bg-transparent border-[3px] border-celadon relative">
@@ -69,6 +75,7 @@ export default function Login() {
                         className="w-[300px] h-[50px] rounded-full bg-transparent border-[2px] border-celadon px-4 ring-0 focus:ring-0 focus:outline-none"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        autoComplete="current-password"
                     />
                     <input
                         type="password"
@@ -76,6 +83,7 @@ export default function Login() {
                         className="w-[300px] h-[50px] rounded-full bg-transparent border-[2px] border-celadon px-4 ring-0 focus:ring-0 focus:outline-none"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        autoComplete="current-password"
                     />
                     <button
                         type="submit"

@@ -25,7 +25,7 @@ export const login = async (username: string, password: string) => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         withCredentials: true, // 쿠키를 포함하도록 설정
-      }
+      },
     )
 
     console.log('응답 헤더:', response.headers)
@@ -41,4 +41,11 @@ export const login = async (username: string, password: string) => {
       throw error
     }
   }
+}
+
+export const me = async () => {
+  const response = await axios.get(`${API_URL}/me`, {
+    withCredentials: true,
+  })
+  return response.data
 }
