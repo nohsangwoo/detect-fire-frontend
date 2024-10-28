@@ -16,7 +16,7 @@ interface useLoginProps {
   onSuccessFunction?: () => void
 }
 
-export const useLogin = ({ onSuccessFunction }: useLoginProps) => {
+const useLogin = ({ onSuccessFunction }: useLoginProps) => {
   return useMutation({
     mutationFn: async ({ username, password }: LoginCredentials) => {
       return login(username, password)
@@ -39,3 +39,5 @@ export const useLogin = ({ onSuccessFunction }: useLoginProps) => {
     },
   })
 }
+
+export default useLogin
