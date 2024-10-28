@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useLogout } from '@/hooks/useLogout';
 import useMe from '@/hooks/useMe';
 import { useRouter } from 'next/navigation';
+import Navbar from '@/components/Navbar';
 
 const REQUEST_INTERVAL = 1000; // 1초마다 요청 (밀리초 단위)
 
@@ -30,6 +31,7 @@ export default function Home() {
   const meQuery = useMe();
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+
 
   const processFrame = async () => {
     if (!videoRef.current) return null;
@@ -151,7 +153,7 @@ export default function Home() {
 
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="grid grid-rows-[20px_1fr_20px] bg-pureblack items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       {devices.length > 0 && (
         <select onChange={(e) => setSelectedDeviceId(e.target.value)}>
           <option value="">카메라를 선택하세요</option>

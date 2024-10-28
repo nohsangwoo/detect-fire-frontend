@@ -16,16 +16,10 @@ interface User {
   // 필요한 다른 사용자 필드들을 여기에 추가하세요
 }
 
-const fetchMe = async (): Promise<User> => {
-  const response = await me()
-  console.log('fetchMe response: ', response)
-  return response
-}
-
 const useMe = () => {
-  const query = useQuery<User, Error>({
+  const query = useQuery<User | null, Error>({
     queryKey: ['me'],
-    queryFn: fetchMe,
+    queryFn: () => me(),
     retry: false,
     refetchOnWindowFocus: false,
     // 아래 옵션들을 추가합니다
