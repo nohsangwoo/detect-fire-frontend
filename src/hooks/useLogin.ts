@@ -14,9 +14,13 @@ interface ErrorResponse {
 
 interface useLoginProps {
   onSuccessFunction?: () => void
+  onErrorFunctionForNeedApproval?: () => void
 }
 
-const useLogin = ({ onSuccessFunction }: useLoginProps) => {
+const useLogin = ({
+  onSuccessFunction,
+  onErrorFunctionForNeedApproval,
+}: useLoginProps) => {
   return useMutation({
     mutationFn: async ({ username, password }: LoginCredentials) => {
       return login(username, password)
@@ -30,12 +34,21 @@ const useLogin = ({ onSuccessFunction }: useLoginProps) => {
       })
     },
     onError: (error: AxiosError<ErrorResponse>) => {
-      const errorMessage = error || '로그인 중 오류가 발생했습니다.'
-      toast.error('로그인 실패', {
-        position: 'bottom-center',
-        theme: 'dark',
-        transition: Bounce,
-      })
+      const errorMessage = error.message || '로그인 중 오류가 발생했습니다.'
+      if (errorMessage === '이메일 인증이 필요합니다.') {
+        toast.warn(errorMessage, {
+          position: 'bottom-center',
+          theme: 'dark',
+          transition: Bounce,
+        })
+        onErrorFunctionForNeedApproval && onErrorFunctionForNeedApproval()
+      } else {
+        toast.error(errorMessage, {
+          position: 'bottom-center',
+          theme: 'dark',
+          transition: Bounce,
+        })
+      }
     },
   })
 }

@@ -60,3 +60,22 @@ export const logout = async () => {
   )
   return response.data
 }
+
+// export const approval = async (signupCode: string) => {
+//   const response = await axios.post(`${API_URL}/verify-email`, { signupCode }, { withCredentials: true })
+//   return response.data
+// }
+
+export const approval = async (email: string, validation_number: string) => {
+  const response = await axios.post(
+    `${API_URL}/verify-email/`,
+    {
+      email,
+      validation_number,
+    },
+    {
+      withCredentials: true,
+    },
+  )
+  return response.data
+}
