@@ -19,10 +19,17 @@ const config: Config = {
         dustyred: '#EA475C',
         reefyellow: '#FFB300',
       },
+      animation: {
+        'border-pulse': 'borderPulse 1s ease-in-out infinite',
+      },
+      keyframes: {
+        borderPulse: {
+          '0%, 100%': { borderColor: 'transparent' },
+          '50%': { borderColor: 'rgb(239, 68, 68)' },
+        },
+      },
     },
   },
-  plugins: [
-    require('daisyui'),
-  ],
+  plugins: [require('daisyui')],
 }
 export default config

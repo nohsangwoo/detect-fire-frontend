@@ -35,7 +35,7 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     const router = useRouter()
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
-
+    const [lastFireDetection, setLastFireDetection] = useState<number>(0);
 
     const processFrame = async () => {
         if (!videoRef.current) return null;
@@ -151,6 +151,20 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     }, [selectedDeviceId]);
 
 
+    // 새로운 useEffect 추가
+    useEffect(() => {
+        if (detectionResults.length > 0) {
+            const latestResult = detectionResults[detectionResults.length - 1];
+            const hasFireDetection = latestResult.detections.some(
+                d => d.class_name.toLowerCase() === 'fire'
+            );
+
+            if (hasFireDetection) {
+                setLastFireDetection(Date.now());
+            }
+        }
+    }, [detectionResults]);
+
 
 
     // 스타일 상수 추가
@@ -162,7 +176,12 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
             start: "px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium transition-all shadow-md hover:shadow-lg active:scale-95",
             stop: "px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-all shadow-md hover:shadow-lg active:scale-95"
         },
-        resultsContainer: "w-full max-w-4xl h-[300px] rounded-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white/70 dark:bg-[#2c2c2e]/70 backdrop-blur-md overflow-hidden p-4 mt-4"
+        resultsContainer: "w-full max-w-4xl h-[300px] rounded-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white/70 dark:bg-[#2c2c2e]/70 backdrop-blur-md overflow-hidden p-4 mt-4",
+        fireAlert: "animate-border-pulse border-2 border-red-500",
+        "@keyframes borderPulse": {
+            "0%, 100%": { borderColor: "transparent" },
+            "50%": { borderColor: "rgb(239, 68, 68)" }, // red-500
+        },
     };
 
     // 상수 추가
@@ -177,6 +196,7 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
         { ssr: false }
     );
 
+    const showAlert = Date.now() - lastFireDetection < 5000;
     return (
         <div className={IOS_STYLES.container}>
             <div className='h-10'></div>
@@ -200,11 +220,11 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                 {!selectedDeviceId ? (
                     <div className="skeleton flex min-h-[300px] bg-gray-100/50 dark:bg-gray-800/50"></div>
                 ) : (
-                    <video 
-                        ref={videoRef} 
-                        autoPlay 
-                        muted 
-                        playsInline 
+                    <video
+                        ref={videoRef}
+                        autoPlay
+                        muted
+                        playsInline
                         className="w-full h-full object-cover"
                     />
                 )}
@@ -227,7 +247,7 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                     {isDetecting && (
                         <div className="flex gap-1">
                             {[...Array(3)].map((_, i) => (
-                                <div key={i} className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" 
+                                <div key={i} className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
                                     style={{ animationDelay: `${i * 0.15}s` }}
                                 />
                             ))}
@@ -236,29 +256,35 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                 </div>
             </div>
 
-            <div className={IOS_STYLES.resultsContainer}>
+            <div className={`${IOS_STYLES.resultsContainer} ${showAlert ? IOS_STYLES.fireAlert : ''}`}>
                 <div className="h-full overflow-y-auto">
                     {detectionResults.length > 0 && (
                         <div className="space-y-4">
                             <h2 className="text-lg font-medium mb-4">처리 결과</h2>
-                            {[...detectionResults].reverse().map((result, index) => (
-                                <div key={index} className="p-4 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 space-y-2">
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">{result.message}</p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">파일명: {result.result_image}</p>
-                                    <h3 className="text-sm font-medium mt-2">감지된 객체:</h3>
-                                    <ul className="space-y-1">
-                                        {result.detections.map((detection, detectionIndex) => (
-                                            <li key={detectionIndex} className="text-sm flex items-center gap-2">
-                                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                                {detection.class_name} 
-                                                <span className="text-xs text-gray-500">
-                                                    (신뢰도: {detection.confidence.toFixed(2)})
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ))}
+                            {[...detectionResults].reverse().map((result, index) => {
+                                return (
+                                    <div
+                                        key={index}
+                                        className={`p-4 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 space-y-2 transition-all
+                                            ${showAlert ? IOS_STYLES.fireAlert : ''}`}
+                                    >
+                                        <p className="text-sm text-gray-600 dark:text-gray-300">{result.message}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">파일명: {result.result_image}</p>
+                                        <h3 className="text-sm font-medium mt-2">감지된 객체:</h3>
+                                        <ul className="space-y-1">
+                                            {result.detections.map((detection, detectionIndex) => (
+                                                <li key={detectionIndex} className="text-sm flex items-center gap-2">
+                                                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                                    {detection.class_name}
+                                                    <span className="text-xs text-gray-500">
+                                                        (신뢰도: {detection.confidence.toFixed(2)})
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
