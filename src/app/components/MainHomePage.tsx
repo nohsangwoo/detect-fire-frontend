@@ -148,17 +148,27 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
 
 
 
+    // 스타일 상수 추가
+    const IOS_STYLES = {
+        container: "flex flex-col bg-[#f5f5f7] dark:bg-[#1d1d1f] items-center justify-items-center min-h-screen px-4 md:px-8",
+        select: "appearance-none bg-white/70 dark:bg-[#2c2c2e]/70 backdrop-blur-md px-4 py-2 rounded-xl border border-gray-200/50 dark:border-gray-700/50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-xs",
+        videoContainer: "w-full max-w-4xl rounded-2xl overflow-hidden shadow-lg bg-white/70 dark:bg-[#2c2c2e]/70 backdrop-blur-md min-h-[300px]",
+        button: {
+            start: "px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium transition-all shadow-md hover:shadow-lg active:scale-95",
+            stop: "px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-all shadow-md hover:shadow-lg active:scale-95"
+        },
+        resultsContainer: "w-full max-w-4xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white/70 dark:bg-[#2c2c2e]/70 backdrop-blur-md overflow-y-auto p-4 mt-4"
+    };
+
     return (
-        <div className="flex flex-col bg-pureblack items-center justify-items-center min-h-screen px-8">
+        <div className={IOS_STYLES.container}>
             <div className='h-10'></div>
 
             {devices.length > 0 && (
                 <select
-                    className="select select-primary w-full max-w-xs"
+                    className={IOS_STYLES.select}
                     onChange={(e) => setSelectedDeviceId(e.target.value)}>
                     <option value="">카메라를 선택하세요</option>
-                    {/* <option value="" disabled>Pick your Camera</option> */}
-
                     {devices.map((device) => (
                         <option key={device.deviceId} value={device.deviceId}>
                             {device.label || `카메라 ${device.deviceId}`}
@@ -167,55 +177,65 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                 </select>
             )}
 
-            <div className='h-10'></div>
+            <div className='h-6'></div>
 
-            <div className='w-full rounded-lg overflow-hidden shadow-md min-h-[300px]'>
+            <div className={IOS_STYLES.videoContainer}>
                 {!selectedDeviceId ? (
-                    <div className="skeleton flex min-h-[300px] "></div>
+                    <div className="skeleton flex min-h-[300px] bg-gray-100/50 dark:bg-gray-800/50"></div>
                 ) : (
-                    <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%' }} />
+                    <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        muted 
+                        playsInline 
+                        className="w-full h-full object-cover"
+                    />
                 )}
             </div>
 
-
             <div className='flex w-full justify-center my-5'>
                 {selectedDeviceId && (!isDetecting ? (
-                    <button className='btn btn-primary text-lg' onClick={handleStartDetection}>화재 감지 시작</button>
+                    <button className={IOS_STYLES.button.start} onClick={handleStartDetection}>
+                        화재 감지 시작
+                    </button>
                 ) : (
-                    <button className='btn btn-error text-lg' onClick={handleStopDetection}>화재 감지 중지</button>
+                    <button className={IOS_STYLES.button.stop} onClick={handleStopDetection}>
+                        화재 감지 중지
+                    </button>
                 ))}
             </div>
-            <div className='flex w-full justify-center'>
+
+            <div className='flex w-full justify-center gap-2'>
                 <div className='flex items-center justify-center min-h-20'>
-                    {/* {isPending && (
-                        <span className="loading loading-ring loading-lg"></span>
-                    )} */}
                     {isDetecting && (
-                        <>
-                            <span className="loading loading-ball loading-xs"></span>
-                            <span className="loading loading-ball loading-sm"></span>
-                            <span className="loading loading-ball loading-md"></span>
-                            <span className="loading loading-ball loading-lg"></span>
-                        </>
+                        <div className="flex gap-1">
+                            {[...Array(3)].map((_, i) => (
+                                <div key={i} className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" 
+                                    style={{ animationDelay: `${i * 0.15}s` }}
+                                />
+                            ))}
+                        </div>
                     )}
                 </div>
-                <div className='flex items-center justify-center min-h-10'>
-                    {error && <p>오류 발생: {(error as Error).message}</p>}
-                </div>
             </div>
-            <div className='w-full h-[50vh] rounded-lg border overflow-y-auto p-2'>
+
+            <div className={IOS_STYLES.resultsContainer}>
                 {detectionResults.length > 0 && (
-                    <div>
-                        <h2>처리 결과:</h2>
+                    <div className="space-y-4">
+                        <h2 className="text-lg font-medium mb-4">처리 결과</h2>
                         {detectionResults.map((result, index) => (
-                            <div key={index}>
-                                <p>{result.message}</p>
-                                <p>파일명: {result.file_name}</p>
-                                <h3>감지된 객체:</h3>
-                                <ul>
+                            <div key={index} className="p-4 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 space-y-2">
+                                <p className="text-sm text-gray-600 dark:text-gray-300">{result.message}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">파일명: {result.file_name}</p>
+                                <h3 className="text-sm font-medium mt-2">감지된 객체:</h3>
+                                <ul className="space-y-1">
                                     {result.detections.map((detection, detectionIndex) => (
-                                        <li key={detectionIndex}>
-                                            {detection.class_name} (신뢰도: {detection.confidence.toFixed(2)})
+                                        <li key={detectionIndex} className="text-sm flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                            {detection.class_name} 
+                                            <span className="text-xs text-gray-500">
+                                                (신뢰도: {detection.confidence.toFixed(2)})
+                                            </span>
                                         </li>
                                     ))}
                                 </ul>
