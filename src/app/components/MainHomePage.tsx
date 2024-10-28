@@ -36,6 +36,11 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
     const [lastFireDetection, setLastFireDetection] = useState<number>(0);
+    const [audioPermission, setAudioPermission] = useState<boolean>(false);
+    const alarmRef = useRef<HTMLAudioElement | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const sourceNodeRef = useRef<OscillatorNode | null>(null); // 타입 변경
+    const gainNodeRef = useRef<GainNode | null>(null);
 
     const processFrame = async () => {
         if (!videoRef.current) return null;
@@ -101,6 +106,11 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     }, [isDetecting, mutate]);
 
     const handleStartDetection = () => {
+        if (!audioPermission) {
+            if (window.confirm("화재 경보 알림음을 허용하시겠습니까?")) {
+                initAudioContext();
+            }
+        }
         setIsDetecting(true);
     };
 
@@ -174,7 +184,8 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
         videoContainer: "w-full max-w-4xl rounded-2xl overflow-hidden shadow-lg bg-white/70 dark:bg-[#2c2c2e]/70 backdrop-blur-md min-h-[300px]",
         button: {
             start: "px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium transition-all shadow-md hover:shadow-lg active:scale-95",
-            stop: "px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-all shadow-md hover:shadow-lg active:scale-95"
+            stop: "px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-all shadow-md hover:shadow-lg active:scale-95",
+            stopAlarm: "px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-all shadow-md hover:shadow-lg active:scale-95"
         },
         resultsContainer: "w-full max-w-4xl h-[300px] rounded-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white/70 dark:bg-[#2c2c2e]/70 backdrop-blur-md overflow-hidden p-4 mt-4",
         fireAlert: "animate-border-pulse border-2 border-red-500",
@@ -197,6 +208,95 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     );
 
     const showAlert = Date.now() - lastFireDetection < 5000;
+
+    console.log("showAlert: ", showAlert)
+
+    const stopAlarm = () => {
+        handleStopDetection();
+        stopAlertSound();
+    }
+
+
+
+    // 알람 초기화
+    useEffect(() => {
+        alarmRef.current = new Audio('/alarm.mp3'); // public 폴더에 alarm.mp3 파일 필요
+        alarmRef.current.loop = true;
+
+        // 컴포넌트 마운트 시 권한 확인
+        if (Notification.permission === 'granted') {
+            setAudioPermission(true);
+        }
+
+        return () => {
+            if (alarmRef.current) {
+                alarmRef.current.pause();
+                alarmRef.current.currentTime = 0;
+            }
+        };
+    }, []);
+
+    // 오디오 컨텍스트 초기화 함수
+    const initAudioContext = () => {
+        if (!audioContextRef.current) {
+            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+            setAudioPermission(true);
+        }
+    };
+
+    // 공습경보 사운드 생성 및 재생
+    const playAlertSound = () => {
+        if (!audioContextRef.current) return;
+        stopAlertSound();
+
+        const oscillator = audioContextRef.current.createOscillator();
+        gainNodeRef.current = audioContextRef.current.createGain();
+
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(440, audioContextRef.current.currentTime);
+
+        // 주파수 변조
+        oscillator.frequency.setValueAtTime(440, audioContextRef.current.currentTime);
+        oscillator.frequency.linearRampToValueAtTime(880, audioContextRef.current.currentTime + 0.5);
+        oscillator.frequency.linearRampToValueAtTime(440, audioContextRef.current.currentTime + 1);
+
+        // 볼륨 조절
+        gainNodeRef.current.gain.setValueAtTime(0.5, audioContextRef.current.currentTime);
+
+        oscillator.connect(gainNodeRef.current);
+        gainNodeRef.current.connect(audioContextRef.current.destination);
+
+        oscillator.start();
+        sourceNodeRef.current = oscillator; // OscillatorNode로 할당
+    };
+
+    // 알람 중지
+    const stopAlertSound = () => {
+        if (sourceNodeRef.current) {
+            sourceNodeRef.current.stop();
+            sourceNodeRef.current.disconnect();
+        }
+        if (gainNodeRef.current) {
+            gainNodeRef.current.disconnect();
+        }
+    };
+
+    // showAlert 상태 변경 시 알람 처리
+    useEffect(() => {
+        if (showAlert && audioPermission) {
+            playAlertSound();
+        } else {
+            stopAlertSound();
+        }
+    }, [showAlert, audioPermission]);
+
+    // 컴포넌트 언마운트 시 정리
+    useEffect(() => {
+        return () => {
+            stopAlertSound();
+        };
+    }, []);
+
     return (
         <div className={IOS_STYLES.container}>
             <div className='h-10'></div>
@@ -236,10 +336,16 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                         화재 감지 시작
                     </button>
                 ) : (
-                    <button className={IOS_STYLES.button.stop} onClick={handleStopDetection}>
-                        화재 감지 중지
-                    </button>
+                    <div className='flex gap-2'>
+                        <button className={IOS_STYLES.button.stop} onClick={handleStopDetection}>
+                            화재 감지 중지
+                        </button>
+                        <button className={IOS_STYLES.button.stopAlarm} onClick={stopAlarm}>
+                            알람 중지
+                        </button>
+                    </div>
                 ))}
+
             </div>
 
             <div className='flex w-full justify-center gap-2'>
