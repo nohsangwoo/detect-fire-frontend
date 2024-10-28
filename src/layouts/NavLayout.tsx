@@ -1,5 +1,5 @@
 import { me } from "@/api/auth"
-import Navbar from "@/components/Navbar"
+import Navbar from "@/app/components/Navbar"
 import { cookies } from "next/headers"
 import React from "react"
 
@@ -13,7 +13,7 @@ async function NavLayout({ children }: { children: React.ReactNode }) {
 
     return (
         <>
-            <Navbar userSession={userSession} />
+            <Navbar cookieString={cookieString} />
             {React.Children.map(children, child =>
                 React.isValidElement(child)
                     ? React.cloneElement(child as React.ReactElement<any>, { userSession })

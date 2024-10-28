@@ -15,11 +15,12 @@ export default async function Home() {
     .join('; ')
 
   const userSession = await me(cookieString)
+  console.log("userSession: ", userSession)
 
   return (
     <>
       <Navbar cookieString={cookieString} />
-      {userSession === null ? <NotLogInHomePage /> : <MainHomePage />}
+      {userSession === null ? <NotLogInHomePage /> : <MainHomePage userSession={userSession} />}
     </>
   );
 }

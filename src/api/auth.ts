@@ -61,7 +61,6 @@ export const me = async (cookies?: string) => {
 }
 
 export const logout = async (cookies?: string) => {
-  console.log("cookies: ", cookies)
   try {
     const response = await axios.post(
       `${API_URL}/logout`,
@@ -75,8 +74,6 @@ export const logout = async (cookies?: string) => {
           : undefined,
       },
     )
-
-    console.log("logout response: ", response.data)
     return response.data
   } catch (error) {
     return null
@@ -100,4 +97,23 @@ export const approval = async (email: string, validation_number: string) => {
     },
   )
   return response.data
+}
+
+export const meaninglessCookieSet = async () => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/pre-login`,
+      {},
+      {
+        withCredentials: true, // 쿠키를 포함하도록 설정
+      },
+    )
+
+    // console.log('응답 헤더:', response.headers)
+    // console.log('쿠키:', response.headers['set-cookie'])
+
+    return response.data
+  } catch (error) {
+    return null
+  }
 }

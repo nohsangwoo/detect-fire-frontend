@@ -1,4 +1,5 @@
 import { logout } from "@/api/auth"
+import { cookies } from "next/headers"
 import { redirect } from 'next/navigation'  // 상단에 추가
 
 interface NavbarProps {
@@ -14,7 +15,18 @@ export default async function Navbar({ cookieString }: NavbarProps) {
         if (!result) {
             return
         }
-        redirect('/login')
+
+        // 단일 쿠키 삭제 예시
+        // (await cookies()).delete('session_id');
+        // (await cookies()).delete('fakesession');
+
+
+        const cookieStore = cookies()
+            ; (await cookieStore).getAll().forEach(async cookie => {
+                console.log("cookie: ", cookie)
+                return (await cookieStore).delete(cookie.name)
+            })
+        // redirect('/login')
     }
 
     return (

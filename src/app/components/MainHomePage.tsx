@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { useLogout } from '@/hooks/useLogout';
-import useMe from '@/hooks/useMe';
 import { useRouter } from 'next/navigation';
 
 
@@ -23,13 +22,16 @@ interface ImageProcessingResponse {
 }
 
 
-export default function MainHomePage() {
+interface MainHomePageProps {
+    userSession?: any
+}
+export default function MainHomePage({ userSession }: MainHomePageProps) {
+
     const [isDetecting, setIsDetecting] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [detectionResults, setDetectionResults] = useState<ImageProcessingResponse[]>([]);
     const logoutMutation = useLogout();
     const router = useRouter()
-    const meQuery = useMe();
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
 
@@ -140,17 +142,6 @@ export default function MainHomePage() {
     }, [selectedDeviceId]);
 
 
-    useEffect(() => {
-        if (meQuery.error) {
-            console.log('로그인 상태 확인 오류:', meQuery.error)
-            router.push('/login')
-        }
-    }, [meQuery.error])
-
-
-    if (meQuery.isLoading) {
-        return <div>loading...</div>
-    }
 
 
     return (

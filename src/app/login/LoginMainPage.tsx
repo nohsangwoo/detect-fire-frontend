@@ -3,8 +3,9 @@
 import useLogin from '@/hooks/useLogin';
 import useSignUp from '@/hooks/useSignUp';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Approval from '@/components/Approval';
+import { meaninglessCookieSet } from '@/api/auth';
 
 export default function LoginMainPage() {
     const [isLogin, setIsLogin] = useState(true);
@@ -12,6 +13,9 @@ export default function LoginMainPage() {
 
     const [password, setPassword] = useState('');
     const router = useRouter();
+    useEffect(() => {
+        meaninglessCookieSet()
+    }, [])
 
     const [isSignupProcessing, setIsSignupProcessing] = useState(false)
 

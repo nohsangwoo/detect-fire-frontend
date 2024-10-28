@@ -35,6 +35,8 @@ const useLogin = ({
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       const errorMessage = error.message || '로그인 중 오류가 발생했습니다.'
+
+      console.log('error: ', error)
       if (errorMessage === '이메일 인증이 필요합니다.') {
         toast.warn(errorMessage, {
           position: 'bottom-center',

@@ -1,9 +1,15 @@
 import { me } from '@/api/auth';
 import LoginMainPage from './LoginMainPage';
-import NotLoginMainPage from './NotLoginMainPage';
+import LoggedImLoginMainPage from './LoggedImLoginMainPage';
 import { cookies } from 'next/headers';
 
 export default async function Login() {
+
+    // const initCookie = async () => {
+    //     'use server'
+    //     return (await cookies()).set('testSession', 'testValue')
+    // }
+    // await initCookie()
 
     // Fetch data from external API
     // 쿠키 정보를 ssr에서 같이 보낼 수 없기때문에 하는 설정.
@@ -15,6 +21,8 @@ export default async function Login() {
     const meResponse = await me(cookieString)
     console.log("meResponse: ", meResponse)
 
+
+    // cookieStore.set('testSession', 'testValue')
 
     // async function serverAction() {
     //     'use server'
@@ -29,7 +37,7 @@ export default async function Login() {
     return (
         <>
             {/* <button onClick={serverAction}>serverAction</button> */}
-            {meResponse === null ? <LoginMainPage /> : <NotLoginMainPage />}
+            {meResponse === null ? <LoginMainPage /> : <LoggedImLoginMainPage />}
         </>
 
     );
