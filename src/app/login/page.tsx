@@ -5,6 +5,7 @@ import useMe from '@/hooks/useMe';
 import { useSignUp } from '@/hooks/useSignUp';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Bounce, toast } from 'react-toastify';
 
 export default function Login() {
     const [isLogin, setIsLogin] = useState(true);
@@ -26,22 +27,14 @@ export default function Login() {
     };
 
     const handleLogin = async () => {
-        try {
-            loginMutation.mutate({ username: email, password })
-        } catch (error) {
-            console.error('로그인 실패:', error)
-        }
+        loginMutation.mutate({ username: email, password })
+
     }
 
     const handleSignup = async () => {
-        try {
-            signUpMutation.mutate({ email, password });
-            console.log('회원가입 성공');
-            // 회원가입 성공 후 처리 (예: 로그인 모드로 전환)
-            setIsLogin(true);
-        } catch (error) {
-            console.error('회원가입 실패:', error);
-        }
+        signUpMutation.mutate({ email, password });
+        setIsLogin(true);
+
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

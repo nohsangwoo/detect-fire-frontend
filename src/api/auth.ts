@@ -28,16 +28,16 @@ export const login = async (username: string, password: string) => {
       },
     )
 
-    console.log('응답 헤더:', response.headers)
-    console.log('쿠키:', response.headers['set-cookie'])
+    // console.log('응답 헤더:', response.headers)
+    // console.log('쿠키:', response.headers['set-cookie'])
 
     return response.data
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
-      console.error('오류 상세:', error.response.data.detail)
+      console.log('오류 상세:', error.response.data.detail)
       throw new Error(error.response.data.detail || '로그인 실패')
     } else {
-      console.error('로그인 오류:', error)
+      console.log('로그인 오류:', error)
       throw error
     }
   }
