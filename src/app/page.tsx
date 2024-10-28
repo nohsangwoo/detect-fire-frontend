@@ -2,7 +2,8 @@
 import { cookies } from "next/headers";
 import { me } from "@/api/auth";
 import MainHomePage from "./components/MainHomePage";
-import Navbar from "@/components/Navbar";
+import Navbar from "./components/Navbar";
+import NotLogInHomePage from "./components/NotLogInHomePage";
 
 
 
@@ -15,12 +16,10 @@ export default async function Home() {
 
   const userSession = await me(cookieString)
 
-
-
   return (
     <>
-      <Navbar userSession={userSession} />
-      {userSession === null ? <></> : <MainHomePage />}
+      <Navbar cookieString={cookieString} />
+      {userSession === null ? <NotLogInHomePage /> : <MainHomePage />}
     </>
   );
 }

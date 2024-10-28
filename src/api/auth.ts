@@ -60,15 +60,27 @@ export const me = async (cookies?: string) => {
   }
 }
 
-export const logout = async () => {
-  const response = await axios.post(
-    `${API_URL}/logout`,
-    {},
-    {
-      withCredentials: true,
-    },
-  )
-  return response.data
+export const logout = async (cookies?: string) => {
+  console.log("cookies: ", cookies)
+  try {
+    const response = await axios.post(
+      `${API_URL}/logout`,
+      {},
+      {
+        withCredentials: true,
+        headers: cookies
+          ? {
+              Cookie: cookies,
+            }
+          : undefined,
+      },
+    )
+
+    console.log("logout response: ", response.data)
+    return response.data
+  } catch (error) {
+    return null
+  }
 }
 
 // export const approval = async (signupCode: string) => {

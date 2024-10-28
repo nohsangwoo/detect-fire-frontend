@@ -3,7 +3,7 @@
 import useLogin from '@/hooks/useLogin';
 import useSignUp from '@/hooks/useSignUp';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Approval from '@/components/Approval';
 
 export default function LoginMainPage() {
