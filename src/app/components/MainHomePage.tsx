@@ -60,7 +60,7 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
             formData.append('file', frame, 'frame.jpg');
 
             const response = await axios.post<ImageProcessingResponse>(
-                'http://localhost:8000/detectfromimage',
+                `${process.env.NEXT_PUBLIC_API_URL}/detectfromimage`,
                 formData,
                 {
                     headers: { 'Content-Type': 'multipart/form-data' },
@@ -111,6 +111,10 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     useEffect(() => {
         async function getDevices() {
             try {
+                // 먼저 카메라 권한 요청
+                await navigator.mediaDevices.getUserMedia({ video: true });
+
+                // 권한 획득 후 장치 목록 가져오기
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
                 setDevices(videoDevices);
@@ -145,10 +149,16 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
 
 
     return (
-        <div className="grid grid-rows-[20px_1fr_20px] bg-pureblack items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+        <div className="flex flex-col bg-pureblack items-center justify-items-center min-h-screen px-8">
+            <div className='h-10'></div>
+
             {devices.length > 0 && (
-                <select onChange={(e) => setSelectedDeviceId(e.target.value)}>
+                <select
+                    className="select select-primary w-full max-w-xs"
+                    onChange={(e) => setSelectedDeviceId(e.target.value)}>
                     <option value="">카메라를 선택하세요</option>
+                    {/* <option value="" disabled>Pick your Camera</option> */}
+
                     {devices.map((device) => (
                         <option key={device.deviceId} value={device.deviceId}>
                             {device.label || `카메라 ${device.deviceId}`}
@@ -156,37 +166,64 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                     ))}
                 </select>
             )}
-            {selectedDeviceId && (
-                <video ref={videoRef} autoPlay muted playsInline style={{ width: '640px', height: '480px' }} />
-            )}
-            {!isDetecting ? (
-                <button onClick={handleStartDetection}>화재 감지 시작</button>
-            ) : (
-                <button onClick={handleStopDetection}>화재 감지 중지</button>
-            )}
-            {isPending && <p>처리 중...</p>}
-            {error && <p>오류 발생: {(error as Error).message}</p>}
-            {detectionResults.length > 0 && (
-                <div>
-                    <h2>처리 결과:</h2>
-                    {detectionResults.map((result, index) => (
-                        <div key={index}>
-                            <p>{result.message}</p>
-                            <p>파일명: {result.file_name}</p>
-                            <h3>감지된 객체:</h3>
-                            <ul>
-                                {result.detections.map((detection, detectionIndex) => (
-                                    <li key={detectionIndex}>
-                                        {detection.class_name} (신뢰도: {detection.confidence.toFixed(2)})
-                                    </li>
-                                ))}
-                            </ul>
-                            {/* <img src={`http://localhost:8000/${result.result_image}`} alt="처리된 이미지" /> */}
-                        </div>
-                    ))}
+
+            <div className='h-10'></div>
+
+            <div className='w-full rounded-lg overflow-hidden shadow-md min-h-[300px]'>
+                {!selectedDeviceId ? (
+                    <div className="skeleton flex min-h-[300px] "></div>
+                ) : (
+                    <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%' }} />
+                )}
+            </div>
+
+
+            <div className='flex w-full justify-center my-5'>
+                {selectedDeviceId && (!isDetecting ? (
+                    <button className='btn btn-primary text-lg' onClick={handleStartDetection}>화재 감지 시작</button>
+                ) : (
+                    <button className='btn btn-error text-lg' onClick={handleStopDetection}>화재 감지 중지</button>
+                ))}
+            </div>
+            <div className='flex w-full justify-center'>
+                <div className='flex items-center justify-center min-h-20'>
+                    {/* {isPending && (
+                        <span className="loading loading-ring loading-lg"></span>
+                    )} */}
+                    {isDetecting && (
+                        <>
+                            <span className="loading loading-ball loading-xs"></span>
+                            <span className="loading loading-ball loading-sm"></span>
+                            <span className="loading loading-ball loading-md"></span>
+                            <span className="loading loading-ball loading-lg"></span>
+                        </>
+                    )}
                 </div>
-            )}
-            <button onClick={handleLogout}>로그아웃</button>
+                <div className='flex items-center justify-center min-h-10'>
+                    {error && <p>오류 발생: {(error as Error).message}</p>}
+                </div>
+            </div>
+            <div className='w-full h-[50vh] rounded-lg border overflow-y-auto p-2'>
+                {detectionResults.length > 0 && (
+                    <div>
+                        <h2>처리 결과:</h2>
+                        {detectionResults.map((result, index) => (
+                            <div key={index}>
+                                <p>{result.message}</p>
+                                <p>파일명: {result.file_name}</p>
+                                <h3>감지된 객체:</h3>
+                                <ul>
+                                    {result.detections.map((detection, detectionIndex) => (
+                                        <li key={detectionIndex}>
+                                            {detection.class_name} (신뢰도: {detection.confidence.toFixed(2)})
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

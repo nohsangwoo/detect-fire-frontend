@@ -1,7 +1,7 @@
 import { clientSideHashingPassword } from '@/lib/hashingPassword'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:8000' // 개발 환경에서는 HTTP 사용
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 export const signUp = async (email: string, password: string) => {
   const hashedPassword = clientSideHashingPassword(password)

@@ -19,7 +19,7 @@ export default async function Home() {
 
   return (
     <>
-      <Navbar cookieString={cookieString} />
+      {userSession && <Navbar cookieString={cookieString} />}
       {userSession === null ? <NotLogInHomePage /> : <MainHomePage userSession={userSession} />}
     </>
   );
