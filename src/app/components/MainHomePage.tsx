@@ -1,4 +1,5 @@
 'use client';
+import dynamic from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
@@ -70,7 +71,11 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
         },
         onSuccess: (data) => {
             if (data) {
-                setDetectionResults(prev => [...prev, data]);
+                setDetectionResults(prev => {
+                    const newResults = [...prev, data];
+                    // 최대 개수를 초과하면 오래된 로그부터 제거
+                    return newResults.slice(-MAX_DETECTION_LOGS);
+                });
                 console.log("새로운 감지 결과:", data);
             }
         },
@@ -157,8 +162,20 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
             start: "px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-medium transition-all shadow-md hover:shadow-lg active:scale-95",
             stop: "px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-all shadow-md hover:shadow-lg active:scale-95"
         },
-        resultsContainer: "w-full max-w-4xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white/70 dark:bg-[#2c2c2e]/70 backdrop-blur-md overflow-y-auto p-4 mt-4"
+        resultsContainer: "w-full max-w-4xl h-[300px] rounded-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white/70 dark:bg-[#2c2c2e]/70 backdrop-blur-md overflow-hidden p-4 mt-4"
     };
+
+    // 상수 추가
+    const MAX_DETECTION_LOGS = 100; // 최대 로그 개수 - 필요에 따라 조절 가능
+
+    // ScrollToBottom import 제거
+    // import ScrollToBottom from 'react-scroll-to-bottom';
+
+    // 대신 dynamic import 추가
+    const ScrollToBottom = dynamic(
+        () => import('react-scroll-to-bottom'),
+        { ssr: false }
+    );
 
     return (
         <div className={IOS_STYLES.container}>
@@ -220,29 +237,31 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
             </div>
 
             <div className={IOS_STYLES.resultsContainer}>
-                {detectionResults.length > 0 && (
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-medium mb-4">처리 결과</h2>
-                        {detectionResults.map((result, index) => (
-                            <div key={index} className="p-4 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 space-y-2">
-                                <p className="text-sm text-gray-600 dark:text-gray-300">{result.message}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">파일명: {result.file_name}</p>
-                                <h3 className="text-sm font-medium mt-2">감지된 객체:</h3>
-                                <ul className="space-y-1">
-                                    {result.detections.map((detection, detectionIndex) => (
-                                        <li key={detectionIndex} className="text-sm flex items-center gap-2">
-                                            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                            {detection.class_name} 
-                                            <span className="text-xs text-gray-500">
-                                                (신뢰도: {detection.confidence.toFixed(2)})
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                <div className="h-full overflow-y-auto">
+                    {detectionResults.length > 0 && (
+                        <div className="space-y-4">
+                            <h2 className="text-lg font-medium mb-4">처리 결과</h2>
+                            {[...detectionResults].reverse().map((result, index) => (
+                                <div key={index} className="p-4 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 space-y-2">
+                                    <p className="text-sm text-gray-600 dark:text-gray-300">{result.message}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">파일명: {result.result_image}</p>
+                                    <h3 className="text-sm font-medium mt-2">감지된 객체:</h3>
+                                    <ul className="space-y-1">
+                                        {result.detections.map((detection, detectionIndex) => (
+                                            <li key={detectionIndex} className="text-sm flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                                {detection.class_name} 
+                                                <span className="text-xs text-gray-500">
+                                                    (신뢰도: {detection.confidence.toFixed(2)})
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
