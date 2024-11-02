@@ -41,6 +41,7 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     const audioContextRef = useRef<AudioContext | null>(null);
     const sourceNodeRef = useRef<OscillatorNode | null>(null); // 타입 변경
     const gainNodeRef = useRef<GainNode | null>(null);
+    console.log("userSession in MainHomePage: ", userSession)
 
     const processFrame = async () => {
         if (!videoRef.current) return null;
@@ -70,6 +71,7 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                 formData,
                 {
                     headers: { 'Content-Type': 'multipart/form-data' },
+                    withCredentials: true,
                 }
             );
             return response.data;
