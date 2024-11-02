@@ -381,8 +381,7 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                                     >
                                         <div className='flex justify-between'>
                                             <div>
-                                                {/* {showAlert ? "화재" : "안전"} */}
-                                                <div className={`w-2 h-2 rounded-full ${showAlert ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                                                <div className={`w-2 h-2 rounded-full ${result.message==="안전" ? 'bg-green-500' : 'bg-red-500'}`}></div>
                                             </div>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">{result.date}</p>
                                         </div>
