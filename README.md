@@ -7,3 +7,5 @@
 # daisyUI 적용
 
 - ref: https://daisyui.com/
+
+# 화재감지시 로그 불러오기 페이지

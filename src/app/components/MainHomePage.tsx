@@ -17,9 +17,10 @@ interface Detection {
 
 interface ImageProcessingResponse {
     message: string;
-    file_name: string;
+    file_name: string | null;
     detections: Detection[];
-    result_image: string;
+    result_image: string | null;
+    date: string | null;
 }
 
 
@@ -108,22 +109,24 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     }, [isDetecting, mutate]);
 
     const handleStartDetection = () => {
-        if (!audioPermission) {
-            if (window.confirm("화재 경보 알림음을 허용하시겠습니까?")) {
-                initAudioContext();
-            }
+        console.log("audioPermission: :  ", audioPermission)
+        if (window.confirm("화재 경보 알림음을 허용하시겠습니까?")) {
+            initAudioContext();
         }
+        // if (!audioPermission) {
+        // }
         setIsDetecting(true);
     };
 
     const handleStopDetection = () => {
         setIsDetecting(false);
+        stopAlertSound();
     };
 
-    const handleLogout = () => {
-        router.push('/login')
-        logoutMutation.mutate()
-    }
+    // const handleLogout = () => {
+    //     router.push('/login')
+    //     logoutMutation.mutate()
+    // }
 
     useEffect(() => {
         async function getDevices() {
@@ -214,7 +217,7 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     console.log("showAlert: ", showAlert)
 
     const stopAlarm = () => {
-        handleStopDetection();
+        // handleStopDetection();
         stopAlertSound();
     }
 
@@ -364,11 +367,11 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                 </div>
             </div>
 
-            <div className={`${IOS_STYLES.resultsContainer} ${showAlert ? IOS_STYLES.fireAlert : ''}`}>
-                <div className="h-full overflow-y-auto">
-                    {detectionResults.length > 0 && (
+            {detectionResults.length > 0 && (
+                <div className={`${IOS_STYLES.resultsContainer} ${showAlert ? IOS_STYLES.fireAlert : ''}`}>
+                    <h2 className="text-lg font-medium mb-4">처리 결과</h2>
+                    <div className="h-full overflow-y-auto pb-20">
                         <div className="space-y-4">
-                            <h2 className="text-lg font-medium mb-4">처리 결과</h2>
                             {[...detectionResults].reverse().map((result, index) => {
                                 return (
                                     <div
@@ -376,8 +379,14 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                                         className={`p-4 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 space-y-2 transition-all
                                             ${showAlert ? IOS_STYLES.fireAlert : ''}`}
                                     >
+                                        <div className='flex justify-between'>
+                                            <div>
+                                                {/* {showAlert ? "화재" : "안전"} */}
+                                                <div className={`w-2 h-2 rounded-full ${showAlert ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                                            </div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{result.date}</p>
+                                        </div>
                                         <p className="text-sm text-gray-600 dark:text-gray-300">{result.message}</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">파일명: {result.result_image}</p>
                                         <h3 className="text-sm font-medium mt-2">감지된 객체:</h3>
                                         <ul className="space-y-1">
                                             {result.detections.map((detection, detectionIndex) => (
@@ -390,13 +399,14 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
                                                 </li>
                                             ))}
                                         </ul>
+                                        {result?.result_image && <p className="text-xs text-gray-500 dark:text-gray-400">파일명: {result?.result_image}</p>}
                                     </div>
                                 );
                             })}
                         </div>
-                    )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
