@@ -1,9 +1,8 @@
 import { me } from "@/api/auth";
-import { getHistory } from "@/api/detection_log";
-import { useQuery } from "@tanstack/react-query";
 import { cookies } from "next/headers";
 import NotLogInHomePage from "../components/NotLogInHomePage";
 import MainHistoryPage from "./MainHistoryPage";
+import Navbar from "../components/Navbar";
 
 const HistoryPage = async () => {
     const cookieStore = await cookies()
@@ -16,6 +15,7 @@ const HistoryPage = async () => {
 
     return (
         <>
+            {userSession && <Navbar cookieString={cookieString} />}
             {userSession === null ? <NotLogInHomePage /> : <MainHistoryPage cookieString={cookieString} />}
         </>
     )

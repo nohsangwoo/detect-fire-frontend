@@ -29,10 +29,25 @@ export default async function Navbar({ cookieString }: NavbarProps) {
         // redirect('/login')
     }
 
+
+    const handleClickLogo = async () => {
+        'use server'
+        redirect('/')
+    }
+
+    const handleClickHistory = async () => {
+        'use server'
+        redirect('/history')
+    }
+
+
+
     return (
         <div className="navbar bg-base-100">
             <div className="flex-1">
-                <a className="btn btn-ghost text-xl">firoUI</a>
+                <a
+                    onClick={handleClickLogo}
+                    className="btn btn-ghost text-xl">firoUI</a>
             </div>
             <div className="flex-none">
 
@@ -48,8 +63,10 @@ export default async function Navbar({ cookieString }: NavbarProps) {
                         tabIndex={0}
                         className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
                         <li>
-                            <a className="justify-between">
-                                Profile
+                            <a
+                                onClick={handleClickHistory}
+                                className="justify-between">
+                                History
                                 {/* <span className="badge">New</span> */}
                             </a>
                         </li>

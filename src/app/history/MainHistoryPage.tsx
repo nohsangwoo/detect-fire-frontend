@@ -58,7 +58,7 @@ export default function MainHistoryPage({ cookieString }: MainHistoryPageProps) 
             className="max-w-lg mx-auto px-4 py-6"
         >
             <AnimatePresence mode="wait">
-                <div className="space-y-4">
+                <div className="space-y-4 pb-24">
                     {historyData?.items.map((item: any, index: number) => (
                         <motion.div
                             key={item.id}
