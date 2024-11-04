@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import connectToCloudFrontURL from "@/lib/connectToCloudFrontURL";
 
 interface MainHistoryPageProps {
     cookieString: string
@@ -91,7 +92,7 @@ export default function MainHistoryPage({ cookieString }: MainHistoryPageProps) 
                                         {item.result_image && (
                                             <motion.img
                                                 whileHover={{ scale: 1.05 }}
-                                                src={item.result_image}
+                                                src={connectToCloudFrontURL(item.result_image)}
                                                 alt="감지 이미지"
                                                 className="w-16 h-16 rounded-lg object-cover"
                                             />
