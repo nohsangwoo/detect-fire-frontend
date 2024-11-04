@@ -20,14 +20,45 @@ interface Detection {
     bbox: number[];
 }
 
+// 필터 타입 정의 (추후 확장성 고려)
+interface FilterTag {
+    id: string;
+    label: string;
+    color: {
+        bg: string;
+        border: string;
+        text: string;
+    };
+}
+
 export default function MainHistoryPage({ cookieString }: MainHistoryPageProps) {
     const [page, setPage] = useState(1);
     const pageSize = 10
     const [expandedItems, setExpandedItems] = useState<number[]>([]);
+    const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+    // 필터 태그 정의 (추후 다른 태그들 쉽게 추가 가능)
+    const filterTags: FilterTag[] = [
+        {
+            id: 'fire',
+            label: '화재',
+            color: {
+                bg: 'bg-red-500/10',
+                border: 'border-red-500',
+                text: 'text-red-500',
+            }
+        },
+        // 추후 다른 태그들 쉽게 추가 가능
+        // {
+        //     id: 'car',
+        //     label: '차량',
+        //     color: { bg: 'bg-blue-500/10', border: 'border-blue-500', text: 'text-blue-500' }
+        // },
+    ];
 
     const { data: historyData } = useQuery({
-        queryKey: ['history', page, pageSize],
-        queryFn: () => getHistory({ page, pageSize }),
+        queryKey: ['history', page, pageSize, activeFilter],
+        queryFn: () => getHistory({ page, pageSize, filter: activeFilter }),
     });
 
     console.log("historyData in HistoryPage: ", historyData)
@@ -51,12 +82,42 @@ export default function MainHistoryPage({ cookieString }: MainHistoryPageProps) 
     const totalLogsCount = historyData?.total_count
     const pageCount = Math.ceil(totalLogsCount / pageSize)
 
+    const handleFilterClick = (filterId: string) => {
+        setActiveFilter(prev => prev === filterId ? null : filterId);
+        setPage(1); // 필터 변경시 첫 페이지로 이동
+    };
+
     return (
         <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="max-w-lg mx-auto px-4 py-6"
         >
+            {/* 필터 태그 섹션 추가 */}
+            <motion.div 
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="mb-6 flex flex-wrap gap-2"
+            >
+                {filterTags.map((tag) => (
+                    <motion.button
+                        key={tag.id}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleFilterClick(tag.id)}
+                        className={`
+                            px-4 py-2 rounded-full text-sm font-medium
+                            border transition-all duration-200
+                            ${activeFilter === tag.id 
+                                ? `${tag.color.bg} ${tag.color.border} ${tag.color.text}` 
+                                : 'border-[#38383A] text-[#8E8E93] hover:border-[#48484A]'
+                            }
+                        `}
+                    >
+                        {tag.label}
+                    </motion.button>
+                ))}
+            </motion.div>
+
             <AnimatePresence mode="wait">
                 <div className="space-y-4 pb-24">
                     {historyData?.items.map((item: any, index: number) => (
