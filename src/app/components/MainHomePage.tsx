@@ -5,6 +5,8 @@ import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 // import { useLogout } from '@/hooks/useLogout';
 // import { useRouter } from 'next/navigation';
+import AlertModal from './AlertModal';
+import { motion } from 'framer-motion';
 
 
 const REQUEST_INTERVAL = 1000; // 1초마다 요청 (밀리초 단위)
@@ -195,6 +197,10 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
             "0%, 100%": { borderColor: "transparent" },
             "50%": { borderColor: "rgb(239, 68, 68)" }, // red-500
         },
+        videoWrapper: "relative overflow-hidden rounded-2xl transition-all duration-300 group hover:shadow-2xl",
+        deviceSelect: "relative",
+        deviceSelectIcon: "absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none",
+        loadingContainer: "absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center",
     };
 
     // 상수 추가
@@ -291,9 +297,12 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     };
 
     // showAlert 상태 변경 시 알람 처리
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     useEffect(() => {
         if (showAlert && audioPermission) {
             playAlertSound();
+            setIsModalOpen(true);
         } else {
             stopAlertSound();
         }
@@ -307,109 +316,116 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     }, []);
 
     return (
-        <div className={IOS_STYLES.container}>
-            <div className='h-10'></div>
+        <>
+            <AlertModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={IOS_STYLES.container}
+            >
+                <div className='h-10'></div>
 
-            {devices.length > 0 && (
-                <select
-                    className={IOS_STYLES.select}
-                    onChange={(e) => setSelectedDeviceId(e.target.value)}>
-                    <option value="">카메라를 선택하세요</option>
-                    {devices.map((device) => (
-                        <option key={device.deviceId} value={device.deviceId}>
-                            {device.label || `카메라 ${device.deviceId}`}
-                        </option>
-                    ))}
-                </select>
-            )}
-
-            <div className='h-6'></div>
-
-            <div className={IOS_STYLES.videoContainer}>
-                {!selectedDeviceId ? (
-                    <div className="skeleton flex min-h-[300px] bg-gray-100/50 dark:bg-gray-800/50"></div>
-                ) : (
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover"
-                    />
+                {devices.length > 0 && (
+                    <select
+                        className={IOS_STYLES.select}
+                        onChange={(e) => setSelectedDeviceId(e.target.value)}>
+                        <option value="">카메라를 선택하세요</option>
+                        {devices.map((device) => (
+                            <option key={device.deviceId} value={device.deviceId}>
+                                {device.label || `카메라 ${device.deviceId}`}
+                            </option>
+                        ))}
+                    </select>
                 )}
-            </div>
 
-            <div className='flex w-full justify-center my-5'>
-                {selectedDeviceId && (!isDetecting ? (
-                    <button className={IOS_STYLES.button.start} onClick={handleStartDetection}>
-                        화재 감지 시작
-                    </button>
-                ) : (
-                    <div className='flex gap-2'>
-                        <button className={IOS_STYLES.button.stop} onClick={handleStopDetection}>
-                            화재 감지 중지
-                        </button>
-                        <button className={IOS_STYLES.button.stopAlarm} onClick={stopAlarm}>
-                            알람 중지
-                        </button>
-                    </div>
-                ))}
+                <div className='h-6'></div>
 
-            </div>
-
-            <div className='flex w-full justify-center gap-2'>
-                <div className='flex items-center justify-center min-h-20'>
-                    {isDetecting && (
-                        <div className="flex gap-1">
-                            {[...Array(3)].map((_, i) => (
-                                <div key={i} className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-                                    style={{ animationDelay: `${i * 0.15}s` }}
-                                />
-                            ))}
-                        </div>
+                <div className={IOS_STYLES.videoContainer}>
+                    {!selectedDeviceId ? (
+                        <div className="skeleton flex min-h-[300px] bg-gray-100/50 dark:bg-gray-800/50"></div>
+                    ) : (
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover"
+                        />
                     )}
                 </div>
-            </div>
 
-            {detectionResults.length > 0 && (
-                <div className={`${IOS_STYLES.resultsContainer} ${showAlert ? IOS_STYLES.fireAlert : ''}`}>
-                    <h2 className="text-lg font-medium mb-4">처리 결과</h2>
-                    <div className="h-full overflow-y-auto pb-20">
-                        <div className="space-y-4">
-                            {[...detectionResults].reverse().map((result, index) => {
-                                return (
-                                    <div
-                                        key={index}
-                                        className={`p-4 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 space-y-2 transition-all
-                                            ${showAlert ? IOS_STYLES.fireAlert : ''}`}
-                                    >
-                                        <div className='flex justify-between'>
-                                            <div>
-                                                <div className={`w-2 h-2 rounded-full ${result.message === "안전" ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                            </div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{result.date}</p>
-                                        </div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-300">{result.message}</p>
-                                        <h3 className="text-sm font-medium mt-2">감지된 객체:</h3>
-                                        <ul className="space-y-1">
-                                            {result.detections.map((detection, detectionIndex) => (
-                                                <li key={detectionIndex} className="text-sm flex items-center gap-2">
-                                                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                                    {detection.class_name}
-                                                    <span className="text-xs text-gray-500">
-                                                        (신뢰도: {detection.confidence.toFixed(2)})
-                                                    </span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        {result?.result_image && <p className="text-xs text-gray-500 dark:text-gray-400">파일명: {result?.result_image}</p>}
-                                    </div>
-                                );
-                            })}
+                <div className='flex w-full justify-center my-5'>
+                    {selectedDeviceId && (!isDetecting ? (
+                        <button className={IOS_STYLES.button.start} onClick={handleStartDetection}>
+                            화재 감지 시작
+                        </button>
+                    ) : (
+                        <div className='flex gap-2'>
+                            <button className={IOS_STYLES.button.stop} onClick={handleStopDetection}>
+                                화재 감지 중지
+                            </button>
+                            <button className={IOS_STYLES.button.stopAlarm} onClick={stopAlarm}>
+                                알람 중지
+                            </button>
                         </div>
+                    ))}
+
+                </div>
+
+                <div className='flex w-full justify-center gap-2'>
+                    <div className='flex items-center justify-center min-h-20'>
+                        {isDetecting && (
+                            <div className="flex gap-1">
+                                {[...Array(3)].map((_, i) => (
+                                    <div key={i} className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                                        style={{ animationDelay: `${i * 0.15}s` }}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
-            )}
-        </div>
+
+                {detectionResults.length > 0 && (
+                    <div className={`${IOS_STYLES.resultsContainer} ${showAlert ? IOS_STYLES.fireAlert : ''}`}>
+                        <h2 className="text-lg font-medium mb-4">처리 결과</h2>
+                        <div className="h-full overflow-y-auto pb-20">
+                            <div className="space-y-4">
+                                {[...detectionResults].reverse().map((result, index) => {
+                                    return (
+                                        <div
+                                            key={index}
+                                            className={`p-4 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 space-y-2 transition-all
+                                                ${showAlert ? IOS_STYLES.fireAlert : ''}`}
+                                        >
+                                            <div className='flex justify-between'>
+                                                <div>
+                                                    <div className={`w-2 h-2 rounded-full ${result.message === "안전" ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                                </div>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">{result.date}</p>
+                                            </div>
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">{result.message}</p>
+                                            <h3 className="text-sm font-medium mt-2">감지된 객체:</h3>
+                                            <ul className="space-y-1">
+                                                {result.detections.map((detection, detectionIndex) => (
+                                                    <li key={detectionIndex} className="text-sm flex items-center gap-2">
+                                                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                                        {detection.class_name}
+                                                        <span className="text-xs text-gray-500">
+                                                            (신뢰도: {detection.confidence.toFixed(2)})
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            {result?.result_image && <p className="text-xs text-gray-500 dark:text-gray-400">파일명: {result?.result_image}</p>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </motion.div>
+        </>
     );
 }
