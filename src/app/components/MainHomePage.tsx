@@ -3,8 +3,8 @@ import dynamic from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
-import { useLogout } from '@/hooks/useLogout';
-import { useRouter } from 'next/navigation';
+// import { useLogout } from '@/hooks/useLogout';
+// import { useRouter } from 'next/navigation';
 
 
 const REQUEST_INTERVAL = 1000; // 1초마다 요청 (밀리초 단위)
@@ -32,8 +32,8 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     const [isDetecting, setIsDetecting] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [detectionResults, setDetectionResults] = useState<ImageProcessingResponse[]>([]);
-    const logoutMutation = useLogout();
-    const router = useRouter()
+    // const logoutMutation = useLogout();
+    // const router = useRouter()
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
     const [lastFireDetection, setLastFireDetection] = useState<number>(0);
