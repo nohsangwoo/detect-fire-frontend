@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'ludgi-fire',
       script: 'node_modules/next/dist/bin/next',
-      args: 'start',
+      args: 'start -p 7999',
       watch: false,
       ignore_watch: ['node_modules', 'logs'],
       autorestart: true,
@@ -15,6 +15,7 @@ module.exports = {
       },
       env_production: {
         NODE_ENV: 'production',
+        PORT: 7999,
         ANALYZE: true,
       },
     },

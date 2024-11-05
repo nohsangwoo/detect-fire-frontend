@@ -25,7 +25,7 @@ RUN npm run build
 
 RUN apt-get update && apt-get install -y ffmpeg inetutils-ping dnsutils vim
 
-EXPOSE 3000
+EXPOSE 7999
 
 
 CMD ["bash", "-c", "pm2-runtime start ecosystem.config.js --env production"]
