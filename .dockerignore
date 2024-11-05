@@ -1,0 +1,36 @@
+.git
+.gitignore
+.dockerignore
+.vscode
+.next
+config
+build
+node_modules
+docker-compose.dev.yml
+docker-compose.prod.yml
+docker-compose.yml
+Dockerfile
+Dockerfile.dev
+Dockerfile.prod
+Makefile
+README.md
+.next
+cypress
+.storybook
+
+docker-compose/*.yml
+.vscode
+prepareDeploy.sh
+nginx-with-extras
+mockComponents
+jest_html_reporters
+dist
+nginx.conf
+configs
+
+*.sh
+.env
+.env.*
+# .env.production
+# .env.aws
+# .env.development

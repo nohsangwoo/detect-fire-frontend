@@ -9,3 +9,7 @@
 - ref: https://daisyui.com/
 
 # 화재감지시 로그 불러오기 페이지
+
+# todos
+
+- 배포, 도커라이징
