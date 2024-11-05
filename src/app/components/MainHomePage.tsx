@@ -128,19 +128,19 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
     // }
 
     useEffect(() => {
-        async function getDevices() {
-            try {
-                // 먼저 카메라 권한 요청
-                await navigator.mediaDevices.getUserMedia({ video: true });
+        // async function getDevices() {
+        //     try {
+        //         // 먼저 카메라 권한 요청
+        //         await navigator.mediaDevices.getUserMedia({ video: true });
 
-                // 권한 획득 후 장치 목록 가져오기
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(device => device.kind === 'videoinput');
-                setDevices(videoDevices);
-            } catch (error) {
-                console.error("디바이스 목록 가져오기 오류:", error);
-            }
-        }
+        //         // 권한 획득 후 장치 목록 가져오기
+        //         const devices = await navigator.mediaDevices.enumerateDevices();
+        //         const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        //         setDevices(videoDevices);
+        //     } catch (error) {
+        //         console.error("디바이스 목록 가져오기 오류:", error);
+        //     }
+        // }
 
         getDevices();
     }, []);
@@ -253,11 +253,60 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
 
     // 오디오 컨텍스트 초기화 함수
     const initAudioContext = () => {
-        if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-            setAudioPermission(true);
+        try {
+            if (!audioContextRef.current) {
+                const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+                audioContextRef.current = new AudioContext();
+
+                // iOS Safari를 위한 처리
+                if (audioContextRef.current.state === 'suspended') {
+                    audioContextRef.current.resume();
+                }
+
+                setAudioPermission(true);
+            }
+        } catch (error) {
+            console.error("오디오 초기화 오류:", error);
+            alert("오디오 기능 초기화에 실패했습니다.");
         }
     };
+
+    // const getDevices = async () => {
+    //     try {
+    //         // 모바일 환경 체크
+    //         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    //         // 카메라 권한 요청 시 제약 조건 추가
+    //         const constraints = {
+    //             video: {
+    //                 facingMode: isMobile ? { ideal: 'environment' } : 'user'
+    //             }
+    //         };
+
+    //         await navigator.mediaDevices.getUserMedia(constraints);
+    //         const devices = await navigator.mediaDevices.enumerateDevices();
+    //         const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    //         setDevices(videoDevices);
+    //     } catch (error) {
+    //         console.error("디바이스 접근 오류:", error);
+    //         // 사용자에게 오류 메시지 표시
+    //         alert("카메라 접근 권한이 필요합니다. 브라우저 설정에서 권한을 허용해주세요.");
+    //     }
+    // };
+
+    async function getDevices() {
+        try {
+            // 먼저 카메라 권한 요청
+            await navigator.mediaDevices.getUserMedia({ video: true });
+
+            // 권한 획득 후 장치 목록 가져오기
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            setDevices(videoDevices);
+        } catch (error) {
+            console.error("디바이스 목록 가져오기 오류:", error);
+        }
+    }
 
     // 공습경보 사운드 생성 및 재생
     const playAlertSound = () => {
@@ -315,10 +364,22 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
         };
     }, []);
 
+    if (!devices || devices.length === 0) {
+        return (
+            <div className='flex flex-col items-center justify-center min-h-screen'>
+                <div>카메라 권한이 필요합니다. 브라우저 설정에서 권한을 허용해주세요.</div>
+                <button
+                    className='bg-blue-500 text-white px-4 py-2 rounded-full'
+                    onClick={() => getDevices()}>권한 요청
+                </button>
+            </div>
+        )
+    }
+
     return (
         <>
             <AlertModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={IOS_STYLES.container}
