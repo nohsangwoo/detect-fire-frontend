@@ -45,6 +45,7 @@ export const login = async (username: string, password: string) => {
 
 // 쿠키 정보를 같이 보내야 하기 때문에 쿠키 정보를 받아와서 헤더에 덮어씌우는 장치를 만들어 놓음.
 export const me = async (cookies?: string) => {
+  console.log("cookies in me: ", cookies)
   try {
     const response = await axios.get(`${API_URL}/me`, {
       withCredentials: true,
