@@ -89,7 +89,7 @@ export const logout = async (cookies?: string) => {
 export const approval = async (email: string, validation_number: string) => {
   console.log("check apiurl in approval: ", API_URL)
   const response = await axios.post(
-    `${API_URL}/verify-email/`,
+    `${API_URL}/verify-email`,
     {
       email,
       validation_number,
