@@ -296,8 +296,20 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
 
     async function getDevices() {
         try {
-            // 먼저 카메라 권한 요청
-            await navigator.mediaDevices.getUserMedia({ video: true });
+            // 모바일 기기 확인
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            // 모바일 기기별 최적화된 제약 조건 설정
+            const constraints = {
+                video: {
+                    facingMode: isMobile ? { ideal: 'environment' } : 'user', // 모바일의 경우 후면 카메라 우선
+                    width: { ideal: isMobile ? 1280 : 1920 },
+                    height: { ideal: isMobile ? 720 : 1080 }
+                }
+            };
+
+            // 카메라 권한 요청
+            await navigator.mediaDevices.getUserMedia(constraints);
 
             // 권한 획득 후 장치 목록 가져오기
             const devices = await navigator.mediaDevices.enumerateDevices();
@@ -305,6 +317,7 @@ export default function MainHomePage({ userSession }: MainHomePageProps) {
             setDevices(videoDevices);
         } catch (error) {
             console.error("디바이스 목록 가져오기 오류:", error);
+            alert("카메라 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.");
         }
     }
 
